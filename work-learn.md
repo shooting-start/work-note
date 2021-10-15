@@ -61,7 +61,7 @@ pdf文件在线预览
 >
 >   
 >
->   ------
+> ------
 >
 >   [^assert.equal(actual, expected[, message\])]: 判断实际值(actual)与期望徝(expected)是否相等(==)，如果不相等，则抛出一个message的错误。
 
@@ -197,4 +197,133 @@ URL的编码方式是怎么样的？
 
 1. 如果约定为纯JSON格式入参，即Content-Type=application/json。后台使用@RequestBody注解，接收前端传递的参数，前台直接使用axios.post即可，不再需要使用QS序列化。
 2. 如果约定为纯表单格式入参，即Content-Type=application/x-ww-form-urlencoder。后台使用@RequestParam注解，接收前端传递的参数，前台使用axios.post提交参数，需要对data进行QS序列化操作。
+
+## 模块化编程方案
+
+### 什么是模块化？
+
+模块化就是将变量和函数 放入不同的文件中 
+
+模块的作用域是私有的 内部定义的代码只能在当前文件中使用 外部使用那么需要将此模块暴露出去
+
+减少全局变量 避免变量名和函数命名冲突
+
+提高代码的复用性和维护性
+
+### AMD、CMD、CommonJs、ES6的对比:
+
+​	AMD、CMD、CommonJs是ES5中提供的模块化编程的方案
+
+​	前端浏览器一般使用AMD、CMD、ES6等定义模块化开发
+
+​	nodeJs后台采用CommonJs规范
+
+- AMD
+
+  ```
+  AMD是RequireJs在推广过程中对模块定义的规范化产出,RequireJS是对AMD的实现
+  两者的关系就好像是JavaScript语言是对ECMAScript规范的实现
+  特点：
+  	。异步加载多个js文件, 减少网页加载的等待
+      。设置某两个js文件前后顺序加载,管理模块间的依赖性
+  
+  // 定义
+  define("模块名", ['其它模块名',...], function (参数,...){
+   //成员: 变量/方法
+   return {
+      要抛出的成员
+   }
+  }); //其中，参数指代前面数组中引入的模块
+  
+  //引入
+  require(["子模块",...], function(参数, ...){
+    //参数指代子模块对象
+    //这里可以调用子模块中的成员了
+  })
+  
+  
+  ```
+
+  
+
+- CMD
+
+  ```
+  CMD---是SeaJS在推广过程中对模块定义的规范化产出，是一个同步模块定义，SeaJS是淘宝团队提供的一个模块开发的js框架.
+  
+  //所有模块通过defined来定义
+  define(function(require,export,module){
+    //通过require引入依赖
+    var $=require('jqurey');
+    var spinning=require('./spinning');
+  })
+  ```
+
+  
+
+- CommonJs
+
+  ```
+  通过module.exports定义的，在前端浏览器里面并不支持module.exports,通过node.js后端使用的。Nodejs端是使用CommonJS规范的，
+  
+  导出模块使用：exports.xxx 或 module.exports.xxx 或 module.exports=xxx 或 this.xxx
+  引入使用：引入使用：require("path")
+  ```
+
+  
+
+- ES6
+
+  ```
+  导出：export default xxx 或 export const f = xxx 或 export {a,b,c}
+  引入：import name from 路径
+  ```
+
+### ES6与CommonJs的区别
+
+- CommonJS 模块输出的是一个值的拷贝，ES6 模块输出的是值的引用。
+
+  - commonjs对于基本数据类型，采用复制副本的方式
+
+  - commonjs对于复杂数据类型，采用对象引用的方式
+
+```
+    也就是说，一旦输出一个值，模块内部的变化就影响不到这个值。请看下面这个模块文件lib.js的例子。
+    
+    // lib.js
+    let count = 3;
+    let obj = {
+        num: 3
+    }
+    const addCount = function() {
+        count++;
+        obj.num++
+    }
+    
+    module.exports = {
+        count,
+        obj,
+        addCount: addCount,
+        };
+    
+    上面代码输出内部变量counter和改写这个变量的内部方法incCounter。然后，在main.js里面加载这个模块。
+    
+     // main.js
+    const lib = require('./lib.js');
+    console.log(lib.count,lib.obj.num);//3 3
+    lib.addCount();
+    console.log(lib.count,lib.obj.num);//3 4 
+```
+
+
+
+- CommonJS模块是运行时加载，ES6 模块是编译时输出接口。
+  - CommonJS模块无论加载多少次，都只会在第一次加载时运行一次，以后再加载，就返回缓存中第一次创建的模块对象
+  - ES6模块是先分析模块之间的依赖关系，然后再严格按照依赖关系，先后执行。而不是在第一次引入时执行。
+
+- CommonJs 是单个值导出，ES6 Module可以导出多个
+
+- CommonJs 是动态语法可以写在判断里，ES6 Module 静态语法只能写在顶层
+
+- CommonJs 的 this 是当前模块，ES6 Module的 this 是 undefined
 
