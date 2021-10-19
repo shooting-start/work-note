@@ -266,8 +266,9 @@ URL的编码方式是怎么样的？
   ```
   通过module.exports定义的，在前端浏览器里面并不支持module.exports,通过node.js后端使用的。Nodejs端是使用CommonJS规范的，
   
-  导出模块使用：exports.xxx 或 module.exports.xxx 或 module.exports=xxx 或 this.xxx
-  引入使用：引入使用：require("path")
+  导出模块使用：module.exports、exports.xxx(相当于module.exports={xxx})
+  			exports 仅仅是 module.exports 的一个引用,如果先使用 exports 对外暴露属性或方法，再使用 module.exports 暴露对象，会使得 exports 上暴露的属性或者方法失效
+  引入使用：require("path")
   ```
 
   
