@@ -328,3 +328,133 @@ URL的编码方式是怎么样的？
 
 - CommonJs 的 this 是当前模块，ES6 Module的 this 是 undefined
 
+## 事件循环
+
+js的事件分为同步事件和异步事件，同步事件在执行栈中，异步事件在任务队列中；任务队列又分为宏任务和微任务，在同一层事件循环中，微任务要先于宏任务执行
+
+- 宏任务
+
+  ```text
+  script(整体代码)
+  setTimeout
+  setInterval
+  I/O
+  UI交互事件
+  postMessage
+  MessageChannel
+  setImmediate(Node.js 环境)
+  ```
+
+- 微任务
+
+  ```text
+  Promise.then
+  Object.observe
+  MutationObserver
+  process.nextTick(Node.js 环境)
+  ```
+
+### 浏览器的事件循环机制
+
+js整体代码运行时产生一个执行上下文，进入栈中，当遇到异步事件时，将他挂起并加入到任务队列中，当执行栈中的代码运行完后，会去查看任务队列中是否存在异步事件，存在则执行这些事件。
+
+执行任务队列中的事件时，会遵循执行栈的规则，首先会生成一个对应当前事件的执行上下文，然后生成执行栈，任务队列，当该执行环境中的代码 执行完毕并返回结果后，js会退出这个执行环境并把这个执行环境销毁，回到上一个方法的执行环境。接着执行任务队列中的下一个事件，规则一样。当任务队列清空后，外层执行环境被销毁，执行结束。
+
+事件循环指的是在任务队列中执行代码重复了外层执行栈的规则，一层一层深入，就形成了循环
+
+### node.js的事件循环机制
+
+Node.js 采用 V8 作为 js 的解析引擎，而 I/O 处理方面使用了自己设计的 libuv，libuv 是一个基于事件驱动的跨平台抽象层，封装了不同操作系统一些底层特性，对外提供统一的 API，事件循环机制也是它里面的实现
+
+![](https://imgconvert.csdnimg.cn/aHR0cHM6Ly91c2VyLWdvbGQtY2RuLnhpdHUuaW8vMjAyMC8zLzIzLzE3MTA1NTZkNTUwOWVmNjM?x-oss-process=image/format,png)
+
+每个阶段的含义：
+
+- timers: 执行`setTimeout`和`setInterval`的回调
+- pending callbacks: 执行延迟到下一个循环迭代的 I/O 回调
+- idle, prepare: 仅系统内部使用
+- poll: 检索新的 I/O 事件;执行与 I/O 相关的回调。事实上除了其他几个阶段处理的事情，其他几乎所有的异步都在这个阶段处理。
+- check: `setImmediate`在这里执行
+- close callbacks: 一些关闭的回调函数，如：`socket.on('close', ...)`
+- process.nextTick()是node中一个特殊的队列，这些事件会在每一个阶段执行完毕准备进入下一个阶段时优先执行。
+- promise执行在process.nextTick()之后，在setTimeout之前
+
+注意：
+poll阶段，他后面并不一定每次都是check阶段，poll队列执行完后，如果没有setImmediate但是有定时器到期，他会绕回去执行定时器阶段
+
+`setImmediate`和`setTimeout`
+
+```
+//在一个异步流程里，setImmediate会比定时器先执行
+
+setTimeout(() => {
+  setTimeout(() => {
+    console.log('setTimeout');
+  }, 0);
+  setImmediate(() => {
+    console.log('setImmediate');
+  });
+}, 0);
+
+或者
+
+var fs = require('fs')
+
+fs.readFile(__filename, () => {
+    setTimeout(() => {
+        console.log('setTimeout');
+    }, 0);
+    setImmediate(() => {
+        console.log('setImmediate');
+    });
+});
+
+//打印
+setImmediate
+setTimeout
+
+```
+
+> 1. 外层是一个`setTimeout`，所以执行他的回调的时候已经在`timers`阶段了
+> 2. 处理里面的`setTimeout`，因为本次循环的`timers`正在执行，所以他的回调其实加到了下个`timers`阶段
+> 3. 处理里面的`setImmediate`，将它的回调加入`check`阶段的队列
+> 4. 外层`timers`阶段执行完，进入`pending callbacks`，`idle, prepare`，`poll`，这几个队列都是空的，所以继续往下
+> 5. 到了`check`阶段，发现了`setImmediate`的回调，拿出来执行
+> 6. 然后是`close callbacks`，队列是空的，跳过
+> 7. 又是`timers`阶段，执行我们的`console`
+
+```
+//直接写在最外层或者在setImmediate阶段
+
+console.log('outer');
+setTimeout(() => {
+  console.log('setTimeout');
+}, 0);
+
+setImmediate(() => {
+  console.log('setImmediate');
+});
+
+或者
+
+setImmediate(() => {
+  setTimeout(() => {
+    console.log('setTimeout');
+  }, 0);
+  setImmediate(() => {
+    console.log('setImmediate');
+  });
+});
+
+//有两种结果
+node.js里面setTimeout(fn, 0)会被强制改为setTimeout(fn, 1),这在官方文档中有说明。(说到这里顺便提下，HTML 5里面setTimeout最小的时间限制是4ms)
+```
+
+直接写在最外层的流程：
+> 1. 外层同步代码一次性全部执行完，遇到异步API就塞到对应的阶段
+> 2. 遇到`setTimeout`，虽然设置的是0毫秒触发，但是被node.js强制改为1毫秒，塞入`times`阶段
+> 3. 遇到`setImmediate`塞入`check`阶段
+> 4. 同步代码执行完毕，进入Event Loop
+> 5. 先进入`times`阶段，检查当前时间过去了1毫秒没有，如果过了1毫秒，满足`setTimeout`条件，执行回调，如果没过1毫秒，跳过
+> 6. 跳过空的阶段，进入check阶段，执行`setImmediate`回调
+
