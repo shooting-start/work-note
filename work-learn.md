@@ -65,6 +65,199 @@ pdf文件在线预览
 >
 >   [^assert.equal(actual, expected[, message\])]: 判断实际值(actual)与期望徝(expected)是否相等(==)，如果不相等，则抛出一个message的错误。
 
+### cryptoJS
+
+crypto-js([GitHub](https://link.jianshu.com/?t=https%3A%2F%2Fgithub.com%2Fbrix%2Fcrypto-js))是谷歌开发的一个纯JavaScript的加密算法类库，可以非常方便的在前端进行其所支持的加解密操作。目前crypto-js已支持的算法有：MD5,SHA-1,SHA-256,AES,Rabbit,MARC4,HMAC,HMAC-MD5,HMAC-SHA1,HMAC-SHA256,PBKDF2。常用的加密方式有MD5和AES，使用时可以引用总文件，也可以单独引用某一文件。
+
+*直接引用*：引入crypto-js文件。
+
+*安装依赖*：npm install crypto-js     import CryptoJS from 'crypto-js'。
+
+```
+function getAesString(data,key,iv){//加密
+    var key  = CryptoJS.enc.Utf8.parse(key);
+    var iv   = CryptoJS.enc.Utf8.parse(iv);
+    var encrypted =CryptoJS.AES.encrypt(data,key,
+        {
+            iv:iv,
+            mode:CryptoJS.mode.CBC,
+            padding:CryptoJS.pad.Pkcs7
+        });
+    return encrypted.toString();    //返回的是base64格式的密文
+}
+function getDAesString(encrypted,key,iv){//解密
+    var key  = CryptoJS.enc.Utf8.parse(key);
+    var iv   = CryptoJS.enc.Utf8.parse(iv);
+    var decrypted =CryptoJS.AES.decrypt(encrypted,key,
+        {
+            iv:iv,
+            mode:CryptoJS.mode.CBC,
+            padding:CryptoJS.pad.Pkcs7
+        });
+    return decrypted.toString(CryptoJS.enc.Utf8);     
+}
+
+function getAES(data){ //加密
+    var key  = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';  //密钥
+    var iv   = '1234567812345678';
+    var encrypted =getAesString(data,key,iv); //密文
+    var encrypted1 =CryptoJS.enc.Utf8.parse(encrypted);
+    return encrypted;
+}
+
+function getDAes(data){//解密
+    var key  = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';  //密钥
+    var iv   = '1234567812345678';
+    var decryptedStr =getDAesString(data,key,iv);
+    return decryptedStr;
+}
+```
+
+### fastclick
+
+移动设备上的浏览器默认会在用户点击屏幕大约延迟300毫秒后才会触发点击事件，这是为了检查用户是否在做双击。为了能够立即响应用户的点击事件，才有了FastClick
+
+### font-awesome
+
+[font awesome](http://www.fontawesome.com.cn/)字体图标库
+
+### html2canvas
+
+[html2canvas](https://html2canvas.hertzen.com/documentation) 是一款利用javascript进行屏幕截图的插件
+
+该脚本允许您直接在用户浏览器上拍摄网页或其部分的“屏幕截图”。屏幕截图基于 DOM，因此可能无法 100% 准确真实呈现，因为它不会制作实际屏幕截图，而是根据页面上的可用信息构建屏幕截图。
+
+该脚本遍历它加载的页面的 DOM。它收集那里所有元素的信息，然后使用这些信息来构建页面的表示。换句话说，它实际上并没有截取页面的屏幕截图，而是根据它从 DOM 读取的属性构建它的表示。
+
+因此，它只能正确渲染它理解的属性，这意味着有许多 CSS 属性不起作用。有关支持的 CSS 属性的完整列表，请查看 [支持的功能](https://html2canvas.hertzen.com/features/)页面。
+
+html2canvas 是一款利用javascript进行屏幕截图的插件。可以使用两种语法格式进行截图：
+
+- 通过在 html2canvas(需要截图的元素).then(function(){}) 的方式向body中 append canvas 图形。
+
+  ```
+  html2canvas(document.getElementById('id'))
+  .then(function(canvas) {document.body.appendChild(canvas);});
+  ```
+
+- 通过 html2canvas(元素，{属性：属性值}) 的方式。
+
+  ```
+  html2canvas(document.getElementById("target"), {
+    allowTaint: true, //允许污染
+    taintTest: true, //在渲染前测试图片(没整明白有啥用)
+    useCORS: true, //使用跨域(当allowTaint为true时这段代码没什么用)
+    background: "#fff",
+    onrendered: function (canvas) {
+      imgBlob = canvas.toDataURL('image/jpeg', 1.0); //将图片转为base64, 0-1 表示清晰度
+      imgBlob = imgBlob.toString().substring(imgBlob.indexOf(",") + 1);//截取base64以便上传
+    }
+  });
+  ```
+
+### js-base64
+
+[js-base64](https://www.npmjs.com/package/js-base64)是Base64转码器
+
+### jszip
+
+[jszip](https://stuk.github.io/jszip/)是一个用于创建、读取和编辑.zip文件的JavaScript库
+
+- 创建一个JSZip实例：
+
+```csharp
+var zip = new JSZip();
+```
+
+- 使用.file(fileName,fileContent)添加一个txt文件
+
+```swift
+zip.file("Hello.txt", "Hello World\n");
+```
+
+- 使用.folder(folderName)添加一个文件夹
+
+```swift
+var img = zip.folder("images");
+```
+
+- 使用.file(fileName,fileContent,base64FLag)在文件夹下添加一个图片文件
+
+```bash
+img.file("smile.gif", imgData, {base64: true});
+```
+
+> 注：fileContent可以是File文件也可以是Blob二进制数据
+
+- 生成一个zip文件
+
+```jsx
+zip.generateAsync({type:"blob"})
+.then(function(content) {
+    // see FileSaver.js
+    saveAs(content, "example.zip");
+});
+```
+
+### print.js
+
+[print.js](https://printjs.crabbly.com/)打印
+
+```html
+<form method="post" action="#" id="printJS-form">
+    ...
+ </form>
+
+ <button type="button" onclick="printJS('printJS-form', 'html')">
+    Print Form
+ </button>
+```
+
+### rimraf 
+
+使用webpack build文件项目时每次都会生成一个dist目录，有时需要把dist目录里的所以旧文件全部删掉，除了可以使用rm -rf /dist/命令删除外，还可以使用rimraf /dist/命令；
+
+rimraf 的作用：以包的形式包装rm -rf命令，用来删除文件和文件夹的，不管文件夹是否为空，都可删除；
+
+### signature pad
+
+一个用于绘制平滑签名的JavaScript库。 它是基于HTML5画布.它适用于所有现代桌面和移动浏览器，不依赖于任何外部库
+这是一个签名插件,兼容主流浏览器和移动端,绘制的曲线相当平滑.提供一些相当实用的接口.体积小,无依赖,遵循MIT协议,这是GitHub地址[signature_pad](https://github.com/szimek/signature_pad)
+
+```
+var canvas = document.querySelector("canvas");
+
+var signaturePad = new SignaturePad(canvas);
+
+// 将签名图像作为数据 URL 返回（有关可能的参数列表，请参阅 https://mdn.io/todataurl）
+signaturePad.toDataURL(); // save image as PNG
+signaturePad.toDataURL("image/jpeg"); // save image as JPEG
+signaturePad.toDataURL("image/svg+xml"); // save image as SVG
+
+// 从数据 URL 中绘制签名图像。
+// 注意：此方法不会填充表示绘制签名的内部数据结构。因此，使用#fromDataURL 后，#toData 将无法正常工作。signature. Thus, after using #fromDataURL, #toData won't work properly.
+signaturePad.fromDataURL("data:image/png;base64,iVBORw0K...");
+
+// 以点组数组的形式返回签名图像
+const data = signaturePad.toData();
+
+// 从点组数组中绘制签名图像
+signaturePad.fromData(data);
+
+// Clears the canvas
+signaturePad.clear();
+
+// 如果画布为空则返回 true，否则返回 false 
+signaturePad.isEmpty();
+
+// 解除所有事件处理程序
+signaturePad.off();
+
+// 重新绑定所有事件处理程序
+signaturePad.on();
+
+```
+
 
 
 ## Blob
@@ -458,3 +651,17 @@ node.js里面setTimeout(fn, 0)会被强制改为setTimeout(fn, 1),这在官方�
 > 5. 先进入`times`阶段，检查当前时间过去了1毫秒没有，如果过了1毫秒，满足`setTimeout`条件，执行回调，如果没过1毫秒，跳过
 > 6. 跳过空的阶段，进入check阶段，执行`setImmediate`回调
 
+## bootstrap
+
+- 开关按钮在js中修改state
+
+```
+$("[name='bedNumber-check']").bootstrapSwitch('state',true)
+```
+
+- slider滑块在js中修改值
+
+```
+```
+
+![](image-20211022164324036.png)
