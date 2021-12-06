@@ -559,6 +559,33 @@ js整体代码运行时产生一个执行上下文，进入栈中，当遇到异
 
 Node.js 采用 V8 作为 js 的解析引擎，而 I/O 处理方面使用了自己设计的 libuv，libuv 是一个基于事件驱动的跨平台抽象层，封装了不同操作系统一些底层特性，对外提供统一的 API，事件循环机制也是它里面的实现
 
+事件循环（Event Loop）分发 I/O 任务，最终工作线程（Work Thread）将任务丢到线程池（Thread Pool）里去执行，而事件循环只要等待执行结果就可以了
+
+- Chrome V8 解释并执行 JavaScript 代码（这就是为什么浏览器能执行 JavaScript 原因）
+- `libuv` 由事件循环和线程池组成，负责所有 I/O 任务的分发与执行
+
+![img](https://pic2.zhimg.com/80/v2-e448ad7d880fd04b4e4c0b06f1fe8189_720w.jpg)
+
+![img](https://pic1.zhimg.com/80/v2-d1a888d31c32ef88e56522e8d5a623f8_720w.jpg)
+
+![img](https://pic1.zhimg.com/80/v2-41e98cd87e21c73094006886dc2a511c_720w.jpg)
+
+
+
+- Client 请求到达 node api，该请求被添加到Event Queue（事件队列）。这是因为Node.js 无法同时处理多个请求。
+
+- Event Loop（事件循环） 始终检查 Event Queue 中是否有待处理事件，如果有就从 Event Queue 中从前到后依次取出，然后提供服务。
+
+- Event Loop 是单线程非阻塞I/O，它会把请求发送给 C++ Thread Pool(线程池)去处理，底层是基于C++ Libuv 异步I/O模型结构可以支持高并发。
+
+- 现在 C++ Thread Pool有大量的请求，如数据库请求，文件请求等。
+
+- 任何线程完成任务时，Callback（回调函数）就会被触发，并将响应发送给 Event Loop。
+
+- 最终 Event Loop 会将请求返回给 Client。
+
+自我理解：将异步任务挂起放在事件队列(event queue)中，事件循环(event loop)会监听event queue，并且分发I/O任务到线程池，任务处理好后执行回调，然后将结果返回给event loop。
+
 ![](https://imgconvert.csdnimg.cn/aHR0cHM6Ly91c2VyLWdvbGQtY2RuLnhpdHUuaW8vMjAyMC8zLzIzLzE3MTA1NTZkNTUwOWVmNjM?x-oss-process=image/format,png)
 
 每个阶段的含义：
@@ -651,17 +678,409 @@ node.js里面setTimeout(fn, 0)会被强制改为setTimeout(fn, 1),这在官方�
 > 5. 先进入`times`阶段，检查当前时间过去了1毫秒没有，如果过了1毫秒，满足`setTimeout`条件，执行回调，如果没过1毫秒，跳过
 > 6. 跳过空的阶段，进入check阶段，执行`setImmediate`回调
 
-## bootstrap
+## 文件的导入导出
 
-- 开关按钮在js中修改state
+- 导出
+
+  - 后端处理表格
+
+  ```
+  a标签结合blob实现下载(但是其中的download对应音频文件和视频文件无效)
+  通过a标签download属性，将后端处理好的表格信息以blob的形式返回到前端
+  
+  axios({ //导出excel
+      method: 'post',
+      url: '/a/bb',
+      data: params,
+      responseType: 'blob'
+  }).then((res)=>{
+  	const link = document.createElement('a');
+  	link.style.display = 'none';
+  	const url = URL.createObjectURL(res.data);
+  	link.setAttribute('download','事件详情'+moment.format("YYYYMDD")+'.xls')
+  	link.href = url;
+  	document.body.appendChild(link);
+  	link.click();
+  	document.body.removeChild(link);
+  	
+  }).catch(err=>{})
+  
+  
+  ```
+
+  - 前端处理表格
+
+  ```
+  ```
+
+  
+
+## data-myData="rgb(0,"0,0)?
+
+- 问题：
 
 ```
-$("[name='bedNumber-check']").bootstrapSwitch('state',true)
+let color = "rgb(0,0,0)"
+然后在标签中加入
+`data-classescolor = ${color}`
 ```
 
-- slider滑块在js中修改值
+页面渲染结果为
+
+![img](%E4%BC%81%E4%B8%9A%E5%BE%AE%E4%BF%A1%E6%88%AA%E5%9B%BE_16365101831782.png)![img](%E4%BC%81%E4%B8%9A%E5%BE%AE%E4%BF%A1%E6%88%AA%E5%9B%BE_16365102166173.png)
+
+- 分析解决：
+
+*可以是全小写字母，也可以是小驼峰，js赋值或者取值的时候需要转换为小写
 
 ```
+ data-myData="hhhh"
+ 
+ console.log(document.querySelector('p').dataset['mydata']);
+ console.log(document.querySelector('p').dataset.mydata);
 ```
 
-![](image-20211022164324036.png)
+将color的rgb转换为16进制表示
+
+```
+转换方法
+String.prototype.colorHex = function () {
+  // RGB颜色值的正则
+  var reg = /^(rgb|RGB)/;
+  var color = this;
+  if (reg.test(color)) {
+    var strHex = "#";
+    // 把RGB的3个数值变成数组
+    var colorArr = color.replace(/(?:\(|\)|rgb|RGB)*/g, "").split(",");
+    // 转成16进制
+    for (var i = 0; i < colorArr.length; i++) {
+      var hex = Number(colorArr[i]).toString(16);
+      if (hex === "0") {
+        hex += hex;
+      }
+      strHex += hex;
+    }
+    return strHex;
+  } else {
+    return String(color);
+  }
+};
+```
+
+## vue中的一些命名规范
+
+- prop
+
+  在声明 prop 的时候，其命名应该始终使用 camelCase，而在模板和 [JSX](https://cn.vuejs.org/v2/guide/render-function.html#JSX) 中应该始终使用 kebab-case。
+
+  ```
+  //WelcomeMessage.vue
+  props: {
+    greetingText: {
+    	type: String,
+    	required: true,
+    }
+  }
+  
+  <WelcomeMessage greeting-text="hi"/>
+  
+  如果使用字符串模板，那么这个限制就不存在了
+  可以使用camelCase
+  ```
+
+- 组件名
+
+  [单文件组件](https://cn.vuejs.org/v2/guide/single-file-components.html)的文件名应该要么始终是单词大写开头 (PascalCase)，要么始终是横线连接 (kebab-case)。
+
+  - 使用 kebab-case
+
+  ```
+  Vue.component('my-component-name', { /* ... */ })
+  ```
+
+  当使用 kebab-case (短横线分隔命名) 定义一个组件时，你也必须在引用这个自定义元素时使用 kebab-case，例如 `<my-component-name>`。
+
+  - 使用 PascalCase
+
+  ```
+  Vue.component('MyComponentName', { /* ... */ })
+  ```
+
+  当使用 PascalCase (首字母大写命名) 定义一个组件时，你在引用这个自定义元素时两种命名法都可以使用。也就是说 `<my-component-name>` 和 `<MyComponentName>` 都是可接受的。注意，尽管如此，直接在 DOM (即非字符串的模板) 中使用时只有 kebab-case 是有效的。
+
+- 事件名
+
+  不同于组件和 prop，事件名不存在任何自动化的大小写转换。而是触发的事件名需要完全匹配监听这个事件所用的名称。
+
+  ```
+  this.$emit('myEvent')
+  
+  <!-- 没有效果 -->
+  <my-component v-on:my-event="doSomething"></my-component>
+  ```
+
+  不同于组件和 prop，事件名不会被用作一个 JavaScript 变量名或 property 名，所以就没有理由使用 camelCase 或 PascalCase 了。并且 `v-on` 事件监听器在 DOM 模板中会被自动转换为全小写 (因为 HTML 是大小写不敏感的)，所以 `v-on:myEvent` 将会变成 `v-on:myevent`——导致 `myEvent` 不可能被监听到。
+
+  推荐始终使用 kebab-case 的事件名
+
+- 动态参数
+
+  ```
+  <!--
+  在 DOM 中使用模板时这段代码会被转换为 `v-bind:[someattr]`。
+  除非在实例中有一个名为“someattr”的 property，否则代码不会工作。
+  -->
+  <a v-bind:[someAttr]="value"> ... </a>
+  ```
+
+  
+
+## 字符串模板与非字符串模板
+
+写在html中的 就是非字符串模板。
+
+写在js中的 template:"",这个就是字符串模板。
+
+## vue中的inheritAttrs与$attrs
+
+vm.$attrs：
+
+​		包含了父作用域中不作为 prop 被识别 (且获取) 的 attribute 绑定 (`class` 和 `style` 除外)。当一个组件没有声明任何 prop 时，这里会包含所有父作用域的绑定 (`class` 和 `style` 除外)，并且可以通过 `v-bind="$attrs"` 传入内部组件——在创建高级别的组件时非常有用。
+
+子组件的props中未注册父组件传递过来的属性。
+
+- inheritAttrs:true(默认)时，子组件的顶层标签元素中会渲染出父组件传递过来的属性
+- inheritAttr:false时，子组件的顶层标签元素中**不**会渲染出父组件传递过来的属性
+
+如果你不希望组件的根元素继承 attribute，你可以在组件的选项中设置 `inheritAttrs: false`
+
+## 排序算法
+
+```
+bubbleSort(arr,type) {
+            if (type) {//降序
+              for(let i = 0; i<arr.length-1;i++) {
+                for(let j = 0;j<arr.length-i-1;j++) {
+                  if(arr[j]<arr[j+1]) {
+                    let tem = arr[j+1];
+                    arr[j+1] = arr[j];
+                    arr[j] = tem;
+                  }
+                }
+              }
+            } else {//升序
+              for(let i = 0; i<arr.length-1;i++) {
+                for(let j = 0;j<arr.length-i-1;j++) {
+                  if(arr[j]>arr[j+1]) {
+                    let tem = arr[j+1];
+                    arr[j+1] = arr[j];
+                    arr[j] = tem;
+                  }
+                }
+              }
+            }
+            return arr;
+          },
+          
+          selectionSort(arr,type) {
+            if (type) {//降序
+               for(let i = 0; i<arr.length-1;i++) {
+                let maxIndex = i;
+                for(let j = i+1; j<arr.length;j++) {
+                  if (arr[maxIndex] < arr[j]) {
+                    maxIndex = j;
+                  }
+                }
+                let tem = arr[i];
+                arr[i] = arr[maxIndex];
+                arr[maxIndex] = tem;
+              }
+
+            } else {//升序
+              for(let i = 0; i<arr.length-1;i++) {
+                let minIndex = i;
+                for(let j = i+1; j<arr.length;j++) {
+                  if (arr[minIndex] > arr[j]) {
+                    minIndex = j;
+                  }
+                }
+                let tem = arr[i];
+                arr[i] = arr[minIndex];
+                arr[minIndex] = tem;
+              }
+
+            }
+            return arr;
+
+          },
+
+          insertSort(arr,type) {
+            let len = arr.length;
+            if (type) {//降序
+              for(let i = 1;i<len;i++) {
+                let prev = i-1;
+                let current = arr[i];
+                while(prev>=0 && arr[prev]<current) {
+                  arr[prev+1] = arr[prev];
+                  prev -= 1;
+                }
+                arr[prev+1] = current;
+
+              }
+            } else {//升序
+              for(let i = 1;i<len;i++) {
+                let prev = i-1;
+                let current = arr[i];
+                while(prev>=0 && arr[prev]>current) {
+                  arr[prev+1] = arr[prev];
+                  prev -= 1;
+                }
+                arr[prev+1] = current;
+
+              }
+            }
+            return arr;
+          },
+
+          shellSort(arr,type) {
+            let len = arr.length;
+            if (type) {
+              for(let gap = Math.floor(len/2);gap>0;gap=Math.floor(gap/2) ) {
+                
+                for (let i = gap; i < len; i++) {
+                  let prev = i-gap;
+                  let current = arr[i];
+                  while(prev>=0 && arr[prev] < current) {
+                    arr[prev +gap] = arr[prev];
+                    prev -= gap;
+                  }
+                  arr[prev+gap] = current;
+                }
+              }
+            } else {
+              for(let gap = Math.floor(len/2);gap>0;gap=Math.floor(gap/2) ) {
+                
+                for (let i = gap; i < len; i++) {
+                  let prev = i-gap;
+                  let current = arr[i];
+                  while(prev>=0 && arr[prev] > current) {
+                    arr[prev +gap] = arr[prev];
+                    prev -= gap;
+                  }
+                  arr[prev+gap] = current;
+                }
+              }
+            }
+            return arr;
+          },
+
+          // 升序
+          quickSort(arr,left,right) {
+            // if(arr.length <=1 ) {
+            //   return arr;
+            // }
+            // let pivot = arr[Math.floor(arr.length/2)];
+            // let left = [];
+            // let right = [];
+
+            // for(let i = 0; i<arr.length;i++) {
+            //   if(arr[i]<pivot) {
+            //     left.push(arr[i]);
+            //   } else if (arr[i]>pivot) {
+            //     right.push(arr[i]);
+            //   }
+            // }
+            // return this.quickSort(left).concat(pivot).concat(this.quickSort(right));
+
+            if(left >= right) {
+                return;
+            }
+
+            let pivot = arr[left];
+            let i = left;
+            let j = right;
+            // 注意如果将arr[j]和基准交换一定要先从右往左找，先从左往右找到的i一定是大于基准的，但是j不一定是小于基准的
+            //  [12,3,6,12,4,456,123,90] 先从左往右查找的话：i = 5 ,由于j = 5 ,arr[j]是大于基准12的 
+            // 先从右往左查找的话：j = 4,arr[j]一定是小于基准的，
+            while(i<j) {
+              while (i<j && arr[j] >= pivot) {
+                j--;
+              }
+              while (i<j && arr[i] <= pivot) {
+                i++;
+              }
+              [arr[i],arr[j]] = [arr[j],arr[i]]
+            }
+
+            arr[left] = arr[j];
+            arr[j] = pivot;
+            
+            this.quickSort(arr,left,j-1)
+            this.quickSort(arr,j+1,right)
+
+            // 反之要先从左往右找
+            // pivot = arr[right];
+            // while(i<j) {
+            //   while (i<j && arr[i] <= pivot) {
+            //     i++;
+            //   }
+            //   while (i<j && arr[j] >= pivot) {
+            //     j--;
+            //   }
+            //   [arr[i],arr[j]] = [arr[j],arr[i]]
+            // }
+
+            // arr[right] = arr[i];
+            // arr[i] = pivot;
+            
+            // this.quickSort(arr,left,i-1)
+            // this.quickSort(arr,i+1,right)
+            return arr;
+
+          },
+          // 降序
+          quickSort_descending(arr,left,right) {
+            if(left >= right) {
+                return;
+            }
+            let pivot = arr[left];
+            let i = left;
+            let j = right;
+
+            
+            while(i<j) {
+              while (i<j && arr[j] <= pivot) {
+                j--;
+              }
+              while (i<j && arr[i] >= pivot) {
+                i++;
+              }
+              [arr[i],arr[j]] = [arr[j],arr[i]]
+            }
+            arr[left] = arr[j];
+            arr[j] = pivot;
+            this.quickSort_descending(arr,left,j-1)
+            this.quickSort_descending(arr,j+1,right)
+
+            // pivot = arr[right]
+            // while(i<j) {
+            //   while (i<j && arr[i] >= pivot) {
+            //     i++;
+            //   }
+            //   while (i<j && arr[j] <= pivot) {
+            //     j--;
+            //   }
+            //   [arr[i],arr[j]] = [arr[j],arr[i]]
+            // }
+            // arr[right] = arr[i];
+            // arr[i] = pivot;
+            // this.quickSort_descending(arr,left,i-1)
+            // this.quickSort_descending(arr,i+1,right)
+
+
+            return arr;
+
+
+          }
+```
+
