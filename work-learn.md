@@ -1,3 +1,7 @@
+
+
+
+
 ## 插件
 
 ### **file-saver**
@@ -258,7 +262,13 @@ signaturePad.on();
 
 ```
 
+### jsonwebtoken
 
+ 用于签发、解析 token
+
+### koa-jwt 
+
+用于路由权限控制
 
 ## Blob
 
@@ -1082,5 +1092,104 @@ bubbleSort(arr,type) {
 
 
           }
+```
+
+## 其他
+
+getComputedStyle() 方法用于获取指定元素的 CSS 样式。
+
+获取的样式是元素在浏览器中最终渲染效果的样式。window.getComputedStyle(moveBox).width 
+
+----
+
+`element.style` 读取的只是元素的**内联样式**，即写在元素的 style 属性上的样式
+
+## session + cookie实现登录
+
+- 安装依赖：
+
+```
+- koa-router
+	app.use(router.routes()).use(router.allowedMethods());
+	// 配置路由地址
+	//app.js
+	const index = require('./routers/index');
+	router.use('/user',index)
+	//routers/index.js
+	router.post('/signin',controller.signin)
+	moudule.exports = router.routes()
+	
+- koa-bodyparser
+	app.use(bodyParser())
+	post请求请求主体被发送的数据   ctx.request.body获得
+	get请求query  ctx.query
+- koa2-cors
+	app.use(cors({credentials: true}));//解决跨域问题
+	
+- koa-session-minimal
+	将session存放在MySQL数据库中
+
+- koa-mysql-session
+	为koa-session-minimal中间件提供MySQL数据库的session数据读写操作。
+	
+	const session = require('koa-session-minimal')
+	const MysqlSession = require('koa-mysql-session')
+	
+	// session存储配置
+    let store = new MysqlSession({
+      user: 'root',
+      password: '123',
+      database: 'test',
+      host: 'localhost',
+    })
+    let cookie ={               // 与 cookie 相关的配置
+        domain: 'localhost',    // 写 cookie 所在的域名
+        path: '/',              // 写 cookie 所在的路径
+        maxAge: 1000 * 300,      // cookie 有效时长
+        httpOnly: true,         // 是否只用于 http 请求中获取
+        overwrite: false        // 是否允许重写
+    }
+    app.use(session({
+      key: 'SESSION_ID',
+      store: store,//设置外部存储。
+      cookie: cookie
+    }))
+```
+
+
+
+- 服务端结构
+
+  <img src="image-20211215175001425.png" alt="image-20211215175001425" style="zoom: 80%;" />
+
+
+
+
+
+
+
+![image-20211215173538222](image-20211215173538222.png)
+
+expires:过期时间
+
+```
+
+对除登录、注册以外的接口判断是否存在session，不存在为未登录
+session过期后，请求不会带cookie（cookie也过期）
+app.use(async (ctx,next)=>{
+  console.log(ctx.session);
+  if (ctx.url === '/user/signin' || ctx.url === '/user/signup') {
+    await next()
+  } else {
+    await next();
+    if (!ctx.session.userId) {
+      ctx.body = {
+        message: 'session失效'
+      }
+    }
+  }
+})
+
+获取用户信息时可以用session中的用户id来查
 ```
 
