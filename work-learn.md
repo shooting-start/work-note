@@ -1104,6 +1104,114 @@ getComputedStyle() 方法用于获取指定元素的 CSS 样式。
 
 `element.style` 读取的只是元素的**内联样式**，即写在元素的 style 属性上的样式
 
+## vue template标签
+
+不能使用`v-show`
+
+`v-for`不能绑定`key`
+
+## 防抖节流
+
+函数防抖：对于高频事件，设置一个时间s秒，需要处理的部分在s秒后才开始执行，在这期间如果再次触发了这个事件，当前的计时取消，重新开始计时
+
+```
+/*
+* fn [function] 需要防抖的函数
+* delay [number] 毫秒，防抖期限值
+*/
+function debounce(fn,delay){
+    let timer = null //借助闭包
+    return function() {
+        if(timer){
+            clearTimeout(timer) 
+        }
+        timer = setTimeout(fn,delay) // 简化写法
+    }
+}
+```
+
+节流：在一定时间段内只执行一次
+
+```
+function throttle(fn,delay){
+    let valid = true
+    return function() {
+       if(!valid){
+           //休息时间 暂不接客
+           return false 
+       }
+       // 工作时间，执行函数并且在间隔期内把状态位设为无效
+        valid = false
+        setTimeout(() => {
+            fn()
+            valid = true;
+        }, delay)
+    }
+}
+```
+
+
+
+## 计算元素位置
+
+offsetWidth    //返回元素的宽度（包括元素宽度、内边距和边框，不包括外边距）
+
+offsetHeight    //返回元素的高度（包括元素高度、内边距和边框，不包括外边距）
+
+clientWidth     //返回元素的宽度（包括元素宽度、内边距，不包括边框和外边距）
+
+clientHeight    //返回元素的高度（包括元素高度、内边距，不包括边框和外边距）
+
+style.width     //返回元素的宽度（包括元素宽度，不包括内边距、边框和外边距）
+
+style.height    //返回元素的高度（包括元素高度，不包括内边距、边框和外边距）
+
+scrollWidth    //返回元素的宽度（包括元素宽度、内边距和溢出尺寸，不包括边框和外边距），无溢出的情况，与clientWidth相同
+
+scrollHeigh    //返回元素的高度（包括元素高度、内边距和溢出尺寸，不包括边框和外边距），无溢出的情况，与clientHeight相同
+
+\1. style.width 返回的是字符串，如28px，offsetWidth返回的是数值28；
+
+\2. style.width/style.height与scrollWidth/scrollHeight是可读写的属性，clientWidth/clientHeight与offsetWidth/offsetHeight是只读属性
+
+\3. style.width的值需要事先定义，否则取到的值为空。而且必须要定义在html里(内联样式)，如果定义在css里，style.height的值仍然为空，但元素偏移有效；而offsetWidth则仍能取到。
+
+//-----------------------------------------------------------------------------------------------
+
+offsetTop  //返回元素的上外缘距离最近采用定位父元素内壁的距离，如果父元素中没有采用定位的，则是获取上外边缘距离文档内壁的距离。
+
+​       所谓的定位就是position属性值为relative、absolute或者fixed。返回值是一个整数，单位是像素。此属性是只读的。
+
+offsetLeft    //此属性和offsetTop的原理是一样的，只不过方位不同，这里就不多介绍了。
+
+scrollLeft    //此属性可以获取或者设置对象的最左边到对象在当前窗口显示的范围内的左边的距离，也就是元素被滚动条向左拉动的距离。
+
+​       返回值是一个整数，单位是像素。此属性是可读写的。
+
+scrollTop  //此属性可以获取或者设置对象的最顶部到对象在当前窗口显示的范围内的顶边的距离，也就是元素滚动条被向下拉动的距离。
+
+​       返回值是一个整数，单位是像素。此属性是可读写的。
+
+//-------------------------------------------------------------------------------------------------
+
+当鼠标事件发生时（不管是onclick，还是omousemove，onmouseover等）
+
+clientX     鼠标相对于浏览器（这里说的是浏览器的有效区域）左上角x轴的坐标；  不随滚动条滚动而改变；
+
+clientY     鼠标相对于浏览器（这里说的是浏览器的有效区域）左上角y轴的坐标； 不随滚动条滚动而改变；
+
+pageX     鼠标相对于浏览器（这里说的是浏览器的有效区域）左上角x轴的坐标；  随滚动条滚动而改变；
+
+pageY     鼠标相对于浏览器（这里说的是浏览器的有效区域）左上角y轴的坐标；  随滚动条滚动而改变；
+
+screenX   鼠标相对于显示器屏幕左上角x轴的坐标； 
+
+screenY    鼠标相对于显示器屏幕左上角y轴的坐标； 
+
+offsetX     鼠标相对于事件源左上角X轴的坐标
+
+offsetY     鼠标相对于事件源左上角Y轴的坐标
+
 ## session + cookie实现登录
 
 - 安装依赖：
