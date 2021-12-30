@@ -1096,7 +1096,7 @@ bubbleSort(arr,type) {
 
 ## 其他
 
-getComputedStyle() 方法用于获取指定元素的 CSS 样式。
+- getComputedStyle() 方法用于获取指定元素的 CSS 样式。
 
 获取的样式是元素在浏览器中最终渲染效果的样式。window.getComputedStyle(moveBox).width 
 
@@ -1104,11 +1104,36 @@ getComputedStyle() 方法用于获取指定元素的 CSS 样式。
 
 `element.style` 读取的只是元素的**内联样式**，即写在元素的 style 属性上的样式
 
-## vue template标签
+- vue template标签
 
 不能使用`v-show`
 
 `v-for`不能绑定`key`
+
+- css元素属性 pointer-events //元素是否对指针事件做出反应
+
+   pointer-events: auto;
+   pointer-events: none;
+
+- 如下效果实现
+
+  变化的是placeholder,点击搜索时判断输入框是否有值，没有值使用placeholder的值
+
+![截图](../%E6%88%AA%E5%9B%BE.gif)
+
+```
+<input :placeholder="hotSearch">
+
+let hots: ['手机','电脑','书籍']
+
+this.hotSearch = hots[0];
+let timer = setInterval(()=>{
+    hots.push(hots.shift());
+    this.hotSearch = hots[0];
+},1000)
+```
+
+
 
 ## 防抖节流
 
@@ -1268,13 +1293,7 @@ offsetY     鼠标相对于事件源左上角Y轴的坐标
 
 - 服务端结构
 
-  <img src="image-20211215175001425.png" alt="image-20211215175001425" style="zoom: 80%;" />
-
-
-
-
-
-
+  ![image-20211215175001425](image-20211215175001425.png)
 
 ![image-20211215173538222](image-20211215173538222.png)
 
