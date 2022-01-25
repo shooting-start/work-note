@@ -248,3 +248,65 @@ bubbleSort(arr,type) {
           }
 ```
 
+## js练习题
+
+块级作用域与函数声明
+
+块级作用域里面声明的函数在es6的浏览器环境中的行为是
+    允许在块级作用域内声明函数。
+    函数声明类似于var，即会提升到全局作用域或函数作用域的头部。
+    同时，函数声明还会提升到所在的块级作用域的头部。
+
+1. 
+
+```
+ let a = 10
+ {
+     function a() {
+     	console.log(1111);
+     };
+}
+console.log(window.a,a);
+//undefined 10
+
+自己的想法：全局作用域使用let const定义了变量，块级作用域里面又定义了相同的名字的函数，这个函数声明应该不会提升到全局作用域或函数作用域的头部。
+```
+
+2. 
+
+```
+var a = 10;
+{
+
+    a = 99;
+    function a() {
+        console.log(1111);
+    };
+    a = 30;
+
+}
+console.log(window.a,a);
+//99 99
+
+```
+
+3. 
+
+```
+console.log(window.a,a)//undefined undefined
+{
+	consloe.log(window.a,a)//undefined a函数
+    a = 99;
+    function a() {
+        console.log(1111);
+    };
+    consloe.log(window.a,a)//99 99
+    a = 30;
+    consloe.log(window.a,a)//99 30
+
+}
+console.log(window.a,a);
+//99 99
+window.a只有等块级作用域中函数声明的定义的那行代码执行过之后，才会被映射到全局作用域。
+```
+

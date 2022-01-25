@@ -1320,3 +1320,61 @@ app.use(async (ctx,next)=>{
 获取用户信息时可以用session中的用户id来查
 ```
 
+## nginx
+
+启动: `start nginx`
+
+修改后：`nginx -s reload`
+
+关闭：
+
+1. ` nginx -s stop`(快速停止nginx)  
+
+2. `nginx -s quit`(完整有序的停止nginx)
+3. `taskkill /f /t /im nginx.exe`
+
+## uniapp
+
+组件中没有页面的生命周期，只有vue组件的生命周期，页面通过props传值给组件，通过计算属性将prop赋值给组件data中的属性
+
+## koa接口
+
+- 循环请求,`Promise.all`
+
+  ```
+  let arr = result.map(async (item)=>{
+  let userinfo =  await dbUtilts.selectById('account',['name','avatar'],item.seller_id);
+  	item.userinfo = userinfo[0]
+   })
+   await Promise.all(arr)
+  ```
+
+  
+
+## setInterval定时器
+
+使用`setInterval()`时，只有当队列中没有该定时器的任何其他代码实例时才将定时器代码添加到队列中。
+
+`setInterval()`是一个宏任务
+
+`setInterval()`的缺点:
+
+- 某些间隔会被跳过
+- 可能多个定时器连续执行
+
+```
+//setTieout实现setInterval
+let timer = null;
+function interval(func,time) {
+    let interv = function () {
+        func.call(null);
+        timer = setTimeout(interv,time);
+    }
+    timer = setTimeout(interv,time);
+}
+
+interval(()=>{
+    console.log(1);
+},1000)
+```
+
