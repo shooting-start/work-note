@@ -1353,6 +1353,8 @@ app.use(async (ctx,next)=>{
 
 ## setInterval定时器
 
+https://www.helloworld.net/p/0667322696
+
 使用`setInterval()`时，只有当队列中没有该定时器的任何其他代码实例时才将定时器代码添加到队列中。
 
 `setInterval()`是一个宏任务
